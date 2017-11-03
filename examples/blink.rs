@@ -10,14 +10,24 @@ const PC7: u8 = 1 << 7;
 
 use core::ptr::{read_volatile, write_volatile};
 
+fn toggle() {
+    unsafe {
+        write_volatile(PORTC, read_volatile(PORTC) ^ PC7);
+    }
+}
+
 fn main() {
     unsafe { write_volatile(DDRC, read_volatile(DDRC) | PC7) }
 
-    loop {
-        unsafe { write_volatile(PORTC, read_volatile(PORTC) | PC7) }
-        flutterby::fcpu::busy_wait_ms(1000);
+    let events = flutterby::eventloop::EventLoop::new();
 
-        unsafe { write_volatile(PORTC, read_volatile(PORTC) & !PC7) }
+    events.add_callback(toggle);
+
+    events.run();
+    /*
+    loop {
+        toggle();
         flutterby::fcpu::busy_wait_ms(1000);
     }
+    */
 }

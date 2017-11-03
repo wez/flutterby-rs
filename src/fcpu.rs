@@ -1,11 +1,11 @@
 
 // Suitable for adafruit 32u4 boards @ 8MHz
 #[cfg(feature = "clock_8mhz")]
-const F_CPU: u32 = 8_000_000;
+pub const F_CPU: u32 = 8_000_000;
 
 // Suitable for ergodox @ 16MHz
 #[cfg(feature = "clock_16mhz")]
-const F_CPU: u32 = 16_000_000;
+pub const F_CPU: u32 = 16_000_000;
 
 /// Busy wait for the specified number of ms
 // borrowed from https://github.com/shepmaster/rust-arduino-blink-led-no-core/blob/part3/hello.rs#L18
