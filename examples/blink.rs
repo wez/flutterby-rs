@@ -1,6 +1,4 @@
 #![no_std]
-#![no_main]
-#![feature(asm)]
 
 extern crate avrd;
 extern crate flutterby;
@@ -12,8 +10,7 @@ const PC7: u8 = 1 << 7;
 
 use core::ptr::{read_volatile, write_volatile};
 
-#[no_mangle]
-pub extern "C" fn main() {
+fn main() {
     unsafe { write_volatile(DDRC, read_volatile(DDRC) | PC7) }
 
     loop {
