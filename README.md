@@ -1,5 +1,7 @@
 # flutterby-rs
-Keyboard firmware implemented in Rust
+Keyboard firmware implemented in Rust.
+
+*It doesn't do anything useful yet!*
 
 ## Building for atmega32u4 devices (ergodox-ez, feather32u4)
 
@@ -8,7 +10,8 @@ Keyboard firmware implemented in Rust
 * Then build the examples from this repo:
 
 ```
-$ XARGO_RUST_SRC=$HOME/avr-rust rustup run avr-toolchain xargo build --target avr-atmega32u4 --release --verbose --examples
+$ XARGO_RUST_SRC=$HOME/avr-rust rustup run avr-toolchain \
+     xargo build --target avr-atmega32u4 --release --verbose --examples
 ```
 
 To flash it to the target device:
