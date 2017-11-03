@@ -1,8 +1,12 @@
 #![feature(lang_items, unwind_attributes)]
 #![feature(asm)]
+#![feature(optin_builtin_traits)]
 #![no_std]
 
+extern crate arduino;
+
 pub mod fcpu;
+pub mod mutex;
 
 // This lang item is present to satisfy the rust linking machinery
 // that we've got an entry point.  It also provides us a way to insert
