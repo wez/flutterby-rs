@@ -1,0 +1,19 @@
+[package]
+name = "flutterby"
+version = "0.1.0"
+authors = ["wez"]
+
+[features]
+default = ["feather32u4"]
+teensy2 = ["clock_16mhz"]
+feather32u4 = ["clock_8mhz"]
+clock_8mhz = []
+clock_16mhz = []
+
+
+[dependencies]
+arduino = "0.1"
+
+# Need to use my fork until https://github.com/avr-rust/avrd/pull/8 is shipped
+avrd = { git = "https://github.com/wez/avrd.git", branch="patch-1" }
+#avrd = { path="../avrd" }
