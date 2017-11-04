@@ -10,7 +10,8 @@ const TIM1_PRESCALER: u64 = 1024;
 const INTERRUPT_EVERY_1_HZ_1024_PRESCALER: u16 =
     ((F_CPU as f64 / (DESIRED_HZ_TIM1 * TIM1_PRESCALER as f64)) as u64 - 1) as u16;
 
-static mut TICKS: u16 = 0;
+type Ticks = u16;
+static mut TICKS: Ticks = 0;
 
 struct EventLoopCore {
     funcs: ArrayVec<[fn(); 8]>,
@@ -53,6 +54,7 @@ impl EventLoop {
         loop {
             let now_tick = unsafe { read_volatile(&TICKS) };
             let elapsed_ticks = now_tick - last_tick;
+            last_tick = now_tick;
 
             let funcs = {
                 let core = self.inner.lock();
