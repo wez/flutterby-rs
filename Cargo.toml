@@ -12,15 +12,13 @@ clock_8mhz = []
 clock_16mhz = []
 
 [build-dependencies]
-avr-mcu = { git = "https://github.com/wez/avr-mcu.git", branch="bitfields" }
+avr-mcu = { git = "https://github.com/wez/avr-mcu.git", branch="interrupts" }
+#avr-mcu = { path = "../avr-mcu" }
 ident_case = "^1.0.0"
 
 [dependencies]
-arduino = "0.1"
 volatile-register = "0.2.0"
 bare-metal = "0.1.1"
 bitflags = "^1.0.0"
-
-# see https://github.com/bluss/arrayvec/issues/83
-arrayvec = {git="https://github.com/bluss/arrayvec.git", default-features=false}
+arrayvec = {version="0.4.6", default-features=false}
 

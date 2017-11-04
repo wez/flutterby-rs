@@ -1,10 +1,10 @@
 use arrayvec::ArrayVec;
 use mutex::Mutex;
 use fcpu::F_CPU;
-use arduino::timer1;
 use core::ptr::{read_volatile, write_volatile};
+use timer1;
 
-const DESIRED_HZ_TIM1: f64 = 1.0;
+const DESIRED_HZ_TIM1: f64 = 2.0;
 const TIM1_PRESCALER: u64 = 1024;
 const INTERRUPT_EVERY_1_HZ_1024_PRESCALER: u16 =
     ((F_CPU as f64 / (DESIRED_HZ_TIM1 * TIM1_PRESCALER as f64)) as u64 - 1) as u16;
@@ -12,7 +12,7 @@ const INTERRUPT_EVERY_1_HZ_1024_PRESCALER: u16 =
 static mut TICKS: u16 = 0;
 
 struct EventLoopCore {
-    funcs: ArrayVec<[fn();8]>,
+    funcs: ArrayVec<[fn(); 8]>,
 }
 
 impl EventLoopCore {
@@ -22,31 +22,35 @@ impl EventLoopCore {
                 timer1::WaveformGenerationMode::ClearOnTimerMatchOutputCompare,
             )
             .clock_source(timer1::ClockSource::Prescale1024)
-            .output_compare_1(Some(INTERRUPT_EVERY_1_HZ_1024_PRESCALER))
+            .output_compare_1(INTERRUPT_EVERY_1_HZ_1024_PRESCALER)
             .configure();
     }
 }
 
 pub struct EventLoop {
-    inner: Mutex<EventLoopCore>
+    inner: Mutex<EventLoopCore>,
 }
 
 impl EventLoop {
     pub fn new() -> Self {
         Self {
             inner: Mutex::new(EventLoopCore {
-                funcs: ArrayVec::new()
-            })
+                funcs: ArrayVec::new(),
+            }),
         }
     }
 
     pub fn run(&self) -> ! {
         let mut core = self.inner.lock();
         core.configure_timer();
+        unsafe {
+            // ensure that interrupts are enabled
+            asm!("SEI");
+        }
 
-        let mut last_tick = unsafe{read_volatile(&TICKS)};
+        let mut last_tick = unsafe { read_volatile(&TICKS) };
         loop {
-            let now_tick = unsafe{read_volatile(&TICKS)};
+            let now_tick = unsafe { read_volatile(&TICKS) };
 
             if now_tick != last_tick {
                 last_tick = now_tick;
@@ -65,7 +69,10 @@ impl EventLoop {
     }
 }
 
-#[no_mangle]
-pub unsafe extern "avr-interrupt" fn _ivr_timer1_compare_a() {
-    write_volatile(&mut TICKS, read_volatile(&TICKS) + 1);
+fn timer1_compare_a() {
+    unsafe {
+        write_volatile(&mut TICKS, read_volatile(&TICKS) + 1);
+    }
 }
+
+irq_handler!(TIMER1_COMPA, timer1_compare_a);

@@ -3,19 +3,50 @@
 #![feature(optin_builtin_traits)]
 #![feature(abi_avr_interrupt)]
 #![no_std]
+#![feature(const_fn)]
 
 #[macro_use]
 extern crate bitflags;
 
 extern crate arrayvec;
-extern crate arduino;
 extern crate bare_metal;
 extern crate volatile_register;
 
-pub mod fcpu;
-pub mod mutex;
-pub mod eventloop;
+#[macro_use]
 pub mod mcu;
+pub mod mutex;
+pub mod fcpu;
+pub mod eventloop;
+pub mod timer1;
+
+// The bootloader may leave some devices in a state that will cause
+// a fault as soon as we re-enable interrupts.  Turn those things off
+// here before we call into main().
+pub fn reset_peripherals() {
+    mutex::interrupt_free(|_cs| {
+        #[cfg(AVR_USB_DEVICE)]
+        unsafe {
+            (*mcu::USB_DEVICE.get())
+                .usbcon
+                .write(mcu::UsbDeviceUsbconFlags::empty());
+        }
+
+        #[cfg(AVR_WDT)]
+        unsafe {
+            let cpu = &(*mcu::CPU.get());
+            cpu.mcusr.modify(|x| x - mcu::CpuMcusrFlags::WDRF);
+            cpu.clkpr
+                .write(mcu::CpuClkprFlags::CPU_CLK_PRESCALE_4_BITS_SMALL_1);
+
+            // Disable watchdog resets
+            asm!("WDR");
+            let wdt = &(*mcu::WDT.get());
+            wdt.wdtcsr
+                .modify(|x| x | mcu::WdtWdtcsrFlags::WDCE | mcu::WdtWdtcsrFlags::WDE);
+            wdt.wdtcsr.write(mcu::WdtWdtcsrFlags::empty());
+        }
+    });
+}
 
 // This lang item is present to satisfy the rust linking machinery
 // that we've got an entry point.  It also provides us a way to insert
@@ -23,6 +54,7 @@ pub mod mcu;
 // that get emitted in the bin crate, but improves ergonomics.
 #[lang = "start"]
 extern "C" fn __bin_crate_start(main: fn(), _argc: isize, _argv: *const *const u8) -> isize {
+    reset_peripherals();
     main();
     0
 }

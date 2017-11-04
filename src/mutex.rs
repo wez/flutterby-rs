@@ -1,16 +1,15 @@
-use arduino::SREG;
+use mcu::{CpuSregFlags, CPU};
 use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
-use core::ptr::{read_volatile, write_volatile};
 
 pub struct CriticalSection {
-    sreg: u8,
+    sreg: CpuSregFlags,
 }
 
 impl CriticalSection {
     pub fn new() -> CriticalSection {
         unsafe {
-            let sreg = read_volatile(SREG);
+            let sreg = (*CPU.get()).sreg.read();
             asm!("CLI");
             asm!("" ::: "memory");
 
@@ -25,10 +24,15 @@ impl Drop for CriticalSection {
         // enabling interrupts again if they were enabled prior
         // to our CLI, or leaving them disabled if we were nested.
         unsafe {
-            write_volatile(SREG, self.sreg);
+            (*CPU.get()).sreg.write(self.sreg);
             asm!("" ::: "memory");
         }
     }
+}
+
+pub fn interrupt_free<F: Fn(&CriticalSection)>(f: F) {
+    let cs = CriticalSection::new();
+    f(&cs)
 }
 
 /// Mutex operates similarly to its namesake in std::sync::Mutex,

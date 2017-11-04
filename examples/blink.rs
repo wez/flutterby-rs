@@ -17,16 +17,9 @@ fn main() {
         (*PORTC.get()).ddrc.modify(|x| x | PortcSignalFlags::PC7);
     }
 
-    /*
     let events = flutterby::eventloop::EventLoop::new();
 
-    events.add_callback(toggle);
+    events.add_callback(toggle_led);
 
     events.run();
-    */
-
-    loop {
-        toggle_led();
-        flutterby::fcpu::busy_wait_ms(1000);
-    }
 }
