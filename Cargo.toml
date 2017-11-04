@@ -2,6 +2,7 @@
 name = "flutterby"
 version = "0.1.0"
 authors = ["wez"]
+build = "build.rs"
 
 [features]
 default = ["feather32u4"]
@@ -10,13 +11,16 @@ feather32u4 = ["clock_8mhz"]
 clock_8mhz = []
 clock_16mhz = []
 
+[build-dependencies]
+avr-mcu = { git = "https://github.com/wez/avr-mcu.git", branch="bitfields" }
+ident_case = "^1.0.0"
 
 [dependencies]
 arduino = "0.1"
-# see https://github.com/bluss/arrayvec/issues/83
-#arrayvec = {version="0.4.5", default-features=false}
-arrayvec = {path="../arrayvec", default-features=false}
+volatile-register = "0.2.0"
+bare-metal = "0.1.1"
+bitflags = "^1.0.0"
 
-# Need to use my fork until https://github.com/avr-rust/avrd/pull/8 is shipped
-avrd = { git = "https://github.com/wez/avrd.git", branch="patch-1" }
-#avrd = { path="../avrd" }
+# see https://github.com/bluss/arrayvec/issues/83
+arrayvec = {git="https://github.com/bluss/arrayvec.git", default-features=false}
+

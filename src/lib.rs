@@ -4,12 +4,18 @@
 #![feature(abi_avr_interrupt)]
 #![no_std]
 
+#[macro_use]
+extern crate bitflags;
+
 extern crate arrayvec;
 extern crate arduino;
+extern crate bare_metal;
+extern crate volatile_register;
 
 pub mod fcpu;
 pub mod mutex;
 pub mod eventloop;
+pub mod mcu;
 
 // This lang item is present to satisfy the rust linking machinery
 // that we've got an entry point.  It also provides us a way to insert
