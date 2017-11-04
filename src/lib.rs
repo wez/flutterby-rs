@@ -4,6 +4,7 @@
 #![feature(abi_avr_interrupt)]
 #![no_std]
 #![feature(const_fn)]
+#![feature(unique)]
 
 #[macro_use]
 extern crate bitflags;
@@ -21,6 +22,7 @@ pub mod timer1;
 #[cfg(AVR_WDT)]
 pub mod wdt;
 pub mod sleep;
+pub mod heap;
 
 // The bootloader may leave some devices in a state that will cause
 // a fault as soon as we re-enable interrupts.  Turn those things off
