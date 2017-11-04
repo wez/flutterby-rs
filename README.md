@@ -6,7 +6,6 @@ Keyboard firmware implemented in Rust.
 ## Building for atmega32u4 devices (ergodox-ez, feather32u4)
 
 * First build the cross compiler per these instructions: https://github.com/avr-rust/rust (this will take a couple of hours, but you only need to do it once)
-
 * Then build the examples from this repo:
 
 ```
@@ -20,3 +19,12 @@ To flash it to the target device:
 $ avr-objcopy target/avr-atmega32u4/release/examples/blink.elf -O ihex target/target.hex
 $ avrdude -p atmega32u4 -U flash:w:target/target.hex:i -cavr109 -b57600 -D
 ```
+
+There's a helper script for building and running a given example:
+
+```
+$ ./run.sh blink
+```
+
+This makes some assumptions about the location of the `avr-rust` source and which port
+my device is attached to.
