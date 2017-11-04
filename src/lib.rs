@@ -18,6 +18,9 @@ pub mod mutex;
 pub mod fcpu;
 pub mod eventloop;
 pub mod timer1;
+#[cfg(AVR_WDT)]
+pub mod wdt;
+pub mod sleep;
 
 // The bootloader may leave some devices in a state that will cause
 // a fault as soon as we re-enable interrupts.  Turn those things off
@@ -32,19 +35,7 @@ pub fn reset_peripherals() {
         }
 
         #[cfg(AVR_WDT)]
-        unsafe {
-            let cpu = &(*mcu::CPU.get());
-            cpu.mcusr.modify(|x| x - mcu::CpuMcusrFlags::WDRF);
-            cpu.clkpr
-                .write(mcu::CpuClkprFlags::CPU_CLK_PRESCALE_4_BITS_SMALL_1);
-
-            // Disable watchdog resets
-            asm!("WDR");
-            let wdt = &(*mcu::WDT.get());
-            wdt.wdtcsr
-                .modify(|x| x | mcu::WdtWdtcsrFlags::WDCE | mcu::WdtWdtcsrFlags::WDE);
-            wdt.wdtcsr.write(mcu::WdtWdtcsrFlags::empty());
-        }
+        wdt::initialize_disabled();
     });
 }
 

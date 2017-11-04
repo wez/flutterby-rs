@@ -3,8 +3,9 @@ use mutex::Mutex;
 use fcpu::F_CPU;
 use core::ptr::{read_volatile, write_volatile};
 use timer1;
+use sleep;
 
-const DESIRED_HZ_TIM1: f64 = 2.0;
+const DESIRED_HZ_TIM1: f64 = 1.0;
 const TIM1_PRESCALER: u64 = 1024;
 const INTERRUPT_EVERY_1_HZ_1024_PRESCALER: u16 =
     ((F_CPU as f64 / (DESIRED_HZ_TIM1 * TIM1_PRESCALER as f64)) as u64 - 1) as u16;
@@ -51,15 +52,18 @@ impl EventLoop {
         let mut last_tick = unsafe { read_volatile(&TICKS) };
         loop {
             let now_tick = unsafe { read_volatile(&TICKS) };
+            let elapsed_ticks = now_tick - last_tick;
 
-            if now_tick != last_tick {
-                last_tick = now_tick;
-
+            let funcs = {
                 let core = self.inner.lock();
-                for f in core.funcs.iter() {
-                    (f)();
-                }
+                core.funcs.clone()
+            };
+
+            for f in funcs.iter() {
+                (f)();
             }
+
+            sleep::wait_for_event(sleep::SleepMode::Idle);
         }
     }
 
@@ -72,6 +76,7 @@ impl EventLoop {
 fn timer1_compare_a() {
     unsafe {
         write_volatile(&mut TICKS, read_volatile(&TICKS) + 1);
+        sleep::set_event_pending();
     }
 }
 

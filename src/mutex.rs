@@ -10,9 +10,7 @@ impl CriticalSection {
     pub fn new() -> CriticalSection {
         unsafe {
             let sreg = (*CPU.get()).sreg.read();
-            asm!("CLI");
-            asm!("" ::: "memory");
-
+            asm!("CLI":::"memory":"volatile");
             CriticalSection { sreg }
         }
     }
