@@ -19,6 +19,13 @@ ident_case = "^1.0.0"
 [dependencies]
 volatile-register = "0.2.0"
 bare-metal = "0.1.1"
-bitflags = "^1.0.0"
 arrayvec = {version="0.4.6", default-features=false}
 
+[profile.dev]
+opt-level = 2
+debug-assertions = false
+panic = "abort"
+
+[profile.release]
+debug = true
+panic = "abort"

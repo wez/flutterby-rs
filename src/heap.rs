@@ -11,6 +11,8 @@ use core::ops::{Deref, DerefMut};
 use core::hash::{self, Hash};
 use core::cmp::Ordering;
 use core::fmt;
+use core::ops::CoerceUnsized;
+use core::marker::Unsize;
 
 extern "C" {
     fn malloc(size: usize) -> *mut u8;
@@ -22,14 +24,14 @@ pub struct Box<T: ?Sized>(Unique<T>);
 impl<T> Box<T> {
     /// Attempt to allocate heap storage for x and move the value
     /// into it.
-    pub fn try_new(x: T) -> Result<Box<T>, ()> {
+    pub fn try_new(x: T) -> Result<Self, ()> {
         unsafe {
             let ptr = malloc(mem::size_of_val(&x)) as *mut T;
             if ptr.is_null() {
                 Err(())
             } else {
                 ptr::write_volatile(ptr, x);
-                Ok(Box {
+                Ok(Self {
                     0: Unique::new_unchecked(ptr),
                 })
             }
@@ -40,7 +42,8 @@ impl<T> Box<T> {
     /// ## Panics
     /// Will panic if there is insufficient heap available.
     /// Consider using try_new() if possible.
-    pub fn new(x: T) -> Box<T> {
+    #[inline(always)]
+    pub fn new(x: T) -> Self {
         Box::try_new(x).expect("malloc failed")
     }
 }
@@ -198,3 +201,5 @@ impl<T: ?Sized> AsMut<T> for Box<T> {
         &mut **self
     }
 }
+
+impl<T: ?Sized + Unsize<U>, U: ?Sized> CoerceUnsized<Box<U>> for Box<T> {}

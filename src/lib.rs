@@ -5,9 +5,8 @@
 #![no_std]
 #![feature(const_fn)]
 #![feature(unique)]
-
-#[macro_use]
-extern crate bitflags;
+#![feature(coerce_unsized)]
+#![feature(unsize)]
 
 extern crate arrayvec;
 extern crate bare_metal;
@@ -64,5 +63,8 @@ pub unsafe extern "C" fn rust_eh_personality(
 #[lang = "panic_fmt"]
 #[unwind]
 pub extern "C" fn rust_begin_panic(_msg: (), _file: &'static str, _line: u32) -> ! {
+    unsafe {
+        asm!("BREAK" ::::"volatile");
+    }
     loop {}
 }
