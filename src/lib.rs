@@ -8,9 +8,17 @@
 #![feature(coerce_unsized)]
 #![feature(unsize)]
 
+#[macro_use]
+pub mod macros;
+
 extern crate arrayvec;
 extern crate bare_metal;
+extern crate futures;
 extern crate volatile_register;
+
+#[cfg(feature = "simavr")]
+#[macro_use]
+pub mod simavr;
 
 #[macro_use]
 pub mod mcu;
@@ -27,6 +35,8 @@ pub mod heap;
 // a fault as soon as we re-enable interrupts.  Turn those things off
 // here before we call into main().
 pub fn reset_peripherals() {
+    logln!("reset_peripherals");
+
     mutex::interrupt_free(|_cs| {
         #[cfg(AVR_USB_DEVICE)]
         unsafe {

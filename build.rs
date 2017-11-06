@@ -89,6 +89,10 @@ fn genmcu(outdir: &PathBuf, mcu: &avr_mcu::Mcu) -> std::io::Result<()> {
         }
     }
 
+    // Candidate locations for simavr registers
+    let mut simavr_console_reg = None;
+    let mut simavr_command_reg = None;
+
     // Emit registers
     for module in mcu.modules.iter() {
         writeln!(mcu_def, "/// Registers for {}", mcu.device.name)?;
@@ -210,7 +214,7 @@ fn genmcu(outdir: &PathBuf, mcu: &avr_mcu::Mcu) -> std::io::Result<()> {
                 writeln!(mcu_def, "}}")?;
             }
 
-            writeln!(mcu_def, "#[repr(C)]")?;
+            writeln!(mcu_def, "#[repr(C, packed)]")?;
             writeln!(mcu_def, "pub struct {} {{", struct_name)?;
             let mut num_holes = 0;
             let base_addr = sorted_regs[0].offset;
@@ -225,6 +229,19 @@ fn genmcu(outdir: &PathBuf, mcu: &avr_mcu::Mcu) -> std::io::Result<()> {
                     if hole_size > 0 {
                         writeln!(mcu_def, "    reserved{}: [u8; {}],", num_holes, hole_size)?;
                         num_holes += 1;
+
+                        // Can we stick the simavr special regs in this hole?
+                        let mut reg_space = hole_size;
+                        let mut reg_addr = prior.offset + prior.size;
+                        if simavr_console_reg.is_none() {
+                            simavr_console_reg = Some(reg_addr);
+                            reg_space -= 1;
+                            reg_addr += 1;
+                        }
+
+                        if simavr_command_reg.is_none() && reg_space > 0 {
+                            simavr_command_reg = Some(reg_addr);
+                        }
                     }
                 }
 
@@ -273,6 +290,55 @@ fn genmcu(outdir: &PathBuf, mcu: &avr_mcu::Mcu) -> std::io::Result<()> {
             )?;
         }
     }
+
+    writeln!(mcu_def, "\n\n\n")?;
+    writeln!(mcu_def, "#[cfg(feature=\"simavr\")]")?;
+    writeln!(mcu_def, "pub mod simavr_regs {{")?;
+    writeln!(mcu_def, "use super::*;")?;
+    writeln!(mcu_def, "use simavr;")?;
+    writeln!(mcu_def, "use volatile_register::RW;")?;
+
+    if let Some(simavr_console_reg) = simavr_console_reg {
+        writeln!(mcu_def, "/// Simavr console")?;
+        writeln!(
+            mcu_def,
+            "pub const SIMAVR_CONSOLE: Peripheral<RW<u8>> =\
+             unsafe {{ Peripheral::new({}) }};",
+            simavr_console_reg
+        )?;
+
+        writeln!(mcu_def, "#[no_mangle]")?;
+        writeln!(mcu_def, "#[link_section = \".mmcu\"]")?;
+        writeln!(
+            mcu_def,
+            "pub static SIMAVR_CONSOLE_REG: simavr::McuAddr =\
+             simavr::McuAddr {{ tag: simavr::Tag::TAG_SIMAVR_CONSOLE, \
+             len: 1, what: {} as *const u8 }};",
+            simavr_console_reg
+        )?;
+    }
+
+    if let Some(simavr_command_reg) = simavr_command_reg {
+        writeln!(mcu_def, "/// Simavr command")?;
+        writeln!(
+            mcu_def,
+            "pub const SIMAVR_COMMAND: Peripheral<RW<u8>> =\
+             unsafe {{ Peripheral::new({}) }};",
+            simavr_command_reg
+        )?;
+
+        writeln!(mcu_def, "#[no_mangle]")?;
+        writeln!(mcu_def, "#[link_section = \".mmcu\"]")?;
+        writeln!(
+            mcu_def,
+            "pub static SIMAVR_COMMAND_REG: simavr::McuAddr =\
+             simavr::McuAddr {{ tag: simavr::Tag::TAG_SIMAVR_COMMAND,\
+             len: 1, what: {} as *const u8 }};",
+            simavr_command_reg
+        )?;
+    }
+
+    writeln!(mcu_def, "}}")?;
 
     Ok(())
 }

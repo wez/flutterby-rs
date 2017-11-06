@@ -4,8 +4,11 @@ export XARGO_RUST_SRC=$HOME/src/oss/avr-rust
 PORT=/dev/cu.usbmodem1431
 set -e
 
+elf=target/avr-atmega32u4/release/examples/$example.elf
+
 rustup run avr-toolchain xargo build --target avr-atmega32u4 --release --verbose --example $example
-avr-objcopy target/avr-atmega32u4/release/examples/$example.elf -O ihex target/$example.hex
+avr-size --format=avr --mcu=atmega32u4 $elf
+avr-objcopy $elf -O ihex target/$example.hex
 
 if [[ ! -e $PORT ]] ; then
   echo "$PORT is not present."

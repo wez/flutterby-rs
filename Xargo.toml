@@ -1,2 +1,6 @@
 [target.avr-atmega32u4.dependencies]
-core = { git = "https://github.com/avr-rust/libcore", branch = "rust-26015da0" }
+
+[target.avr-atmega32u4.dependencies.core]
+git = "https://github.com/avr-rust/libcore"
+#branch = "rust-26015da0"
+rev="d57db84bf2e00b5da99b12a44a3a9a70b79024e7"

@@ -18,7 +18,7 @@
   },
   "exe-suffix": ".elf",
   "post-link-args": {
-    "gcc": ["-Wl,--gc-sections"]
+    "gcc": ["-Wl,--gc-sections", "-Wl,-uSIMAVR_CONSOLE_REG", "-ggdb"]
   },
 
   "no-default-libraries": false
