@@ -5,7 +5,7 @@ Keyboard firmware implemented in Rust.
 
 ## Building for atmega32u4 devices (ergodox-ez, feather32u4)
 
-* First build the cross compiler per these instructions: https://github.com/avr-rust/rust (this will take a couple of hours, but you only need to do it once)
+* First build the cross compiler (you only need to do it once) per these instructions: https://book.avr-rust.com/
 * Then build the examples from this repo:
 
 ```
